@@ -9,6 +9,7 @@ class State(Enum):
     SUSCEPTIBLE = 0
     INFECTED = 1
     RESISTANT = 2
+    #DEAD = 3
 
 
 def number_state(model, state):
@@ -27,6 +28,10 @@ def number_resistant(model):
     return number_state(model, State.RESISTANT)
 
 
+#def number_dead(model):
+ #   return number_state(model, State.RESISTANT)
+
+
 class VirusOnNetwork(mesa.Model):
     """A virus model with some number of agents"""
 
@@ -38,8 +43,10 @@ class VirusOnNetwork(mesa.Model):
         initial_antivirus_size=1, #Agentes con antivirus en un inicio
         virus_spread_chance=0.2,  #Suceptibilidad de los vecinos al virus
         virus_check_frequency=0.4, #La probabilidad de que detecte su estado
+        check_frequency_antivirus=0.7, #Probabilidad de que se desactualice el antivirus
         recovery_chance=0.3, #Probabilidad de que se recupere
         gain_resistance_chance=1, #Ganancia de resistencia al virus (antivirus)
+        #Variable para representar la antiguedad del equipo, en caso de ser atacado ->DEAD
     ):
 
         self.num_nodes = num_nodes
@@ -55,6 +62,7 @@ class VirusOnNetwork(mesa.Model):
         )
         self.virus_spread_chance = virus_spread_chance
         self.virus_check_frequency = virus_check_frequency
+        self.check_frequency_antivirus = check_frequency_antivirus
         self.recovery_chance = recovery_chance
         self.gain_resistance_chance = gain_resistance_chance
 
@@ -63,6 +71,7 @@ class VirusOnNetwork(mesa.Model):
                 "Infected": number_infected,
                 "Susceptible": number_susceptible,
                 "Resistant": number_resistant,
+                #"Dead": number_dead,
             }
         )
 
@@ -74,6 +83,7 @@ class VirusOnNetwork(mesa.Model):
                 State.SUSCEPTIBLE,
                 self.virus_spread_chance,
                 self.virus_check_frequency,
+                self.check_frequency_antivirus,
                 self.recovery_chance,
                 self.gain_resistance_chance,
             )
@@ -120,6 +130,7 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
         initial_state,
         virus_spread_chance,
         virus_check_frequency,
+        check_frequency_antivirus,
         recovery_chance,
         gain_resistance_chance,
     ):
@@ -129,6 +140,7 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
 
         self.virus_spread_chance = virus_spread_chance
         self.virus_check_frequency = virus_check_frequency
+        self.check_frequency_antivirus=check_frequency_antivirus
         self.recovery_chance = recovery_chance
         self.gain_resistance_chance = gain_resistance_chance
 
@@ -149,6 +161,7 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
 
     def try_remove_infection(self):
         # Try to remove
+        # Recovery chance puede ser que tan viejo es el equipo.
         if self.random.random() < self.recovery_chance:
             # Success
             self.state = State.SUSCEPTIBLE
@@ -158,11 +171,15 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
             self.state = State.INFECTED
 
     def try_check_situation(self):
+        #Si ya paso un cierto tiempo intenta remover el virus
         if self.random.random() < self.virus_check_frequency:
             # Checking...
-            #Modificar para que en caso de ser un antivirus cheque en menor tiempo
             if self.state is State.INFECTED:
                 self.try_remove_infection()
+        #Cuando pasa cierto tiempo el antivirus se desactualiza y vuelve a ser vulnerable        
+        if self.state is State.RESISTANT:
+            if self.random.random() < self.check_frequency_antivirus:
+                self.state = State.SUSCEPTIBLE
 
     def step(self):
         if self.state is State.INFECTED:

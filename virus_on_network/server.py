@@ -55,6 +55,7 @@ chart = mesa.visualization.ChartModule(
         {"Label": "Infected", "Color": "#BC2E0F"},
         {"Label": "Susceptible", "Color": "#42F50E"},
         {"Label": "Resistant", "Color": "#3498DB"},
+        #{"Label": "Dead", "Color": "#000000"},
     ]
 )
 
@@ -112,6 +113,14 @@ model_params = {
         0.1,
         description="Probability that a recovered agent will become "
         "resistant to this virus in the future",
+    ),
+    "check_frequency_antivirus": mesa.visualization.Slider(
+        "Outdated",
+        0.4,
+        0.0,
+        1.0,
+        0.1,
+        description="Probability that a antivirus outdated "
     ),
     #Modifica rmás variables de inicilización del modelo.
 }

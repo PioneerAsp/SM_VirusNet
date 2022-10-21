@@ -29,7 +29,7 @@ def network_portrayal(G):
     portrayal = dict()
     portrayal["nodes"] = [
         {
-            "size": 9,
+            "size": 7,
             "color": node_color(agents[0]),
             "tooltip": f"id: {agents[0].unique_id}<br>state: {agents[0].state.name}",
         }
@@ -73,7 +73,7 @@ def get_resistant_susceptible_ratio(model):
 model_params = {
     "num_nodes": mesa.visualization.Slider(
         "Number of agents",
-        40,
+        20,
         10,
         100,
         1,
@@ -84,7 +84,7 @@ model_params = {
     #),
     "initial_outbreak_size": mesa.visualization.Slider(
         "Initial Outbreak Size",
-        4,
+        5,
         1,
         10,
         1,
@@ -92,7 +92,7 @@ model_params = {
     ),
     "initial_antivirus_size": mesa.visualization.Slider(
         "Initial Antivirus Size",
-        5,
+        4,
         1,
         10,
         1,

@@ -116,7 +116,7 @@ model_params = {
     ),
     "check_frequency_antivirus": mesa.visualization.Slider(
         "Outdated",
-        0.4,
+        0.2,
         0.0,
         1.0,
         0.1,

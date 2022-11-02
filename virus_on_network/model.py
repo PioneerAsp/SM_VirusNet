@@ -1,9 +1,8 @@
 import math
 from enum import Enum
 import networkx as nx
-
+import random
 import mesa
-
 
 class State(Enum):
     SUSCEPTIBLE = 0
@@ -42,10 +41,11 @@ class VirusOnNetwork(mesa.Model):
         initial_outbreak_size=1, #Agentes contaminados en un inicio
         initial_antivirus_size=1, #Agentes con antivirus en un inicio
         virus_spread_chance=0.2,  #Suceptibilidad de los vecinos al virus
-        virus_check_frequency=0.4, #La probabilidad de que detecte su estado
-        check_frequency_antivirus=0.7, #Probabilidad de que se desactualice el antivirus
+        virus_check_frequency=0.3, #La probabilidad de que detecte su estado
+        check_frequency_antivirus=0.2, #Probabilidad de que se desactualice el antivirus
         recovery_chance=0.3, #Probabilidad de que se recupere
         gain_resistance_chance=1, #Ganancia de resistencia al virus (antivirus)
+        ports=random.randint(0, 50),
         #Variable para representar la antiguedad del equipo, en caso de ser atacado ->DEAD
     ):
 
@@ -65,6 +65,8 @@ class VirusOnNetwork(mesa.Model):
         self.check_frequency_antivirus = check_frequency_antivirus
         self.recovery_chance = recovery_chance
         self.gain_resistance_chance = gain_resistance_chance
+        self.ports = ports
+        
 
         self.datacollector = mesa.DataCollector(
             {
@@ -86,6 +88,7 @@ class VirusOnNetwork(mesa.Model):
                 self.check_frequency_antivirus,
                 self.recovery_chance,
                 self.gain_resistance_chance,
+                self.ports,
             )
             self.schedule.add(a)
             # Add the agent to the node
@@ -133,6 +136,7 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
         check_frequency_antivirus,
         recovery_chance,
         gain_resistance_chance,
+        ports,
     ):
         super().__init__(unique_id, model)
 
@@ -143,6 +147,7 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
         self.check_frequency_antivirus=check_frequency_antivirus
         self.recovery_chance = recovery_chance
         self.gain_resistance_chance = gain_resistance_chance
+        self.ports = ports
 
     def try_to_infect_neighbors(self):
         neighbors_nodes = self.model.grid.get_neighbors(self.pos, include_center=False)
@@ -154,6 +159,20 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
         for a in susceptible_neighbors:
             if self.random.random() < self.virus_spread_chance:
                 a.state = State.INFECTED
+                
+        #El virus intenta decifrar el puerto libre.
+        antivirus_neighbors = [
+            agent
+            for agent in self.model.grid.get_cell_list_contents(neighbors_nodes)
+            if agent.state is State.RESISTANT
+        ]
+        for a in antivirus_neighbors:
+            if a.ports == self.ports:
+                a.state = State.SUSCEPTIBLE
+                self.ports=random.randint(0,50)
+            else: 
+                self.ports=random.randint(0,50)
+        
 
     def try_gain_resistance(self):
         if self.random.random() < self.gain_resistance_chance:

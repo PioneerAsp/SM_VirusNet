@@ -1,9 +1,7 @@
 import math
-
 import mesa
-
-from .model import VirusOnNetwork, State, number_infected
-
+from .State import State
+from .model import VirusOnNetwork, number_infected
 
 def network_portrayal(G):
     # The model ensures there is always 1 agent per node

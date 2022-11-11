@@ -7,7 +7,7 @@ def network_portrayal(G):
     # The model ensures there is always 1 agent per node
 
     def node_color(agent):
-        return {State.INFECTED: "#BC2E0F", State.SUSCEPTIBLE: "#42F50E"}.get(
+        return {State.INFECTED: "#BC2E0F", State.SUSCEPTIBLE: "#42F50E", State.DEAD : "#FFFFFFF"}.get(
             agent.state, "#3498DB"
         )
 
@@ -29,7 +29,7 @@ def network_portrayal(G):
         {
             "size": 7,
             "color": node_color(agents[0]),
-            "tooltip": f"id: {agents[0].unique_id}<br>state: {agents[0].state.name}",
+            "tooltip": f"id: {agents[0].unique_id}<br>state: {agents[0].state}",
         }
         for (_, agents) in G.nodes.data("agent")
     ]
@@ -53,10 +53,9 @@ chart = mesa.visualization.ChartModule(
         {"Label": "Infected", "Color": "#BC2E0F"},
         {"Label": "Susceptible", "Color": "#42F50E"},
         {"Label": "Resistant", "Color": "#3498DB"},
-        #{"Label": "Dead", "Color": "#000000"},
+        {"Label": "Dead", "Color": "#FFFFFFF"},
     ]
 )
-
 
 def get_resistant_susceptible_ratio(model):
     ratio = model.resistant_susceptible_ratio()
@@ -67,7 +66,6 @@ def get_resistant_susceptible_ratio(model):
         ratio_text, infected_text
     )
 
-
 model_params = {
     "num_nodes": mesa.visualization.Slider(
         "Number of agents",
@@ -77,9 +75,6 @@ model_params = {
         1,
         description="Choose how many agents to include in the model",
     ),
-    #"avg_node_degree": mesa.visualization.Slider(
-    #    "Avg Node Degree", 3, 3, 8, 1, description="Avg Node Degree"
-    #),
     "initial_outbreak_size": mesa.visualization.Slider(
         "Initial Outbreak Size",
         5,
@@ -96,15 +91,17 @@ model_params = {
         1,
         description="Initial Resistan Size",
     ),
-    #"virus_spread_chance": mesa.visualization.Slider
-    #    description="Probability that susceptible neighbor will be infected"
-    #"virus_check_frequency": mesa.visualization.Slider
-    #    description="Frequency the nodes check whether they are infected by " "a virus"
-    # "recovery_chance": mesa.visualization.Slider
-    #     "Recovery Chance"
-    #     description="Probability that the virus will be removed"
-    "gain_resistance_chance": mesa.visualization.Slider(
-        "Gain Resistance Chance",
+    "gain_resistance_chance_virus": mesa.visualization.Slider(
+        "Gain Resistance Chance Virus",
+        1.0,
+        0.0,
+        1.0,
+        0.1,
+        description="Probability that a recovered agent will become "
+        "resistant to this virus in the future",
+    ),
+    "gain_resistance_chance_computer": mesa.visualization.Slider(
+        "Gain Resistance Chance Computer",
         1.0,
         0.0,
         1.0,
@@ -118,9 +115,24 @@ model_params = {
         0.0,
         1.0,
         0.1,
-        description="Probability that a antivirus outdated "
+        description="Frecuency check antivirus "
     ),
-    #Modifica rmás variables de inicilización del modelo.
+    "computer_age": mesa.visualization.Slider(
+        "Computer Ages",
+        0.1,
+        0.0,
+        10.0,
+        0.1,
+        description="Computer age"
+    ),
+    "initial_dead_computer": mesa.visualization.Slider(
+        "Initial Dead Computer",
+        2,
+        1,
+        10,
+        1,
+        description="Initial computer with state dead"
+    ),
 }
 
 server = mesa.visualization.ModularServer(

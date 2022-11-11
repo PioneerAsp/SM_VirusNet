@@ -40,8 +40,3 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
         
         def try_evolution_virus(self): #trata de evolucionar
             return
-            
-        def clasification_situation(self, X, y):
-            clf = tree.DecisionTreeClassifier()
-            clf = clf.fit(X, y)
-            return clf

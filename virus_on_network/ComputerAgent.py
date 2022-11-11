@@ -1,4 +1,5 @@
 import mesa
+import random
 
 from sklearn import tree
 
@@ -10,21 +11,21 @@ class ComputerAgent(mesa.Agent): # Crea las especificaciones del virus
         unique_id,
         model,
         initial_state,
-        virus_spread_chance,
-        virus_check_frequency,
         check_frequency_antivirus,
         recovery_chance,
         gain_resistance_chance,
+        computer_ages,
+        virus,
         ports,
     ):
         super().__init__(unique_id, model)
 
         self.state = initial_state
-        self.virus_spread_chance = virus_spread_chance
-        self.virus_check_frequency = virus_check_frequency
-        self.check_frequency_antivirus=check_frequency_antivirus
+        self.check_frequency_antivirus = check_frequency_antivirus
         self.recovery_chance = recovery_chance
         self.gain_resistance_chance = gain_resistance_chance
+        self.range_age = computer_ages
+        self.virus = virus
         self.ports = ports
 
     def try_to_infect_neighbors(self):
@@ -35,15 +36,16 @@ class ComputerAgent(mesa.Agent): # Crea las especificaciones del virus
             if agent.state is State.SUSCEPTIBLE
         ]
         for a in susceptible_neighbors:
-            if self.random.random() < self.virus_spread_chance:
+            if self.random.random() < self.virus.virus_spread_chance:
                 a.state = State.INFECTED
+                a.state = self.virus
                 
-        #El virus intenta decifrar el puerto libre.
         antivirus_neighbors = [
             agent
             for agent in self.model.grid.get_cell_list_contents(neighbors_nodes)
             if agent.state is State.RESISTANT
         ]
+        
         for a in antivirus_neighbors:
             if a.ports == self.ports:
                 a.state = State.SUSCEPTIBLE
@@ -55,6 +57,7 @@ class ComputerAgent(mesa.Agent): # Crea las especificaciones del virus
     def try_gain_resistance(self):
         if self.random.random() < self.gain_resistance_chance:
             self.state = State.RESISTANT
+            # self.virus.state = 
 
     def try_remove_infection(self):
         # Try to remove
@@ -69,7 +72,7 @@ class ComputerAgent(mesa.Agent): # Crea las especificaciones del virus
 
     def try_check_situation(self):
         #Si ya paso un cierto tiempo intenta remover el virus
-        if self.random.random() < self.virus_check_frequency:
+        if self.random.random() < self.check_frequency_antivirus:
             # Checking...
             if self.state is State.INFECTED:
                 self.try_remove_infection()
@@ -82,15 +85,3 @@ class ComputerAgent(mesa.Agent): # Crea las especificaciones del virus
         if self.state is State.INFECTED:
             self.try_to_infect_neighbors()
         self.try_check_situation()
-    
-    def try_evolution_virus(self):
-        self.virus_check_frequency
-        self.gain_resistance_chance
-        self.recovery_chance
-        self.virus_check_frequency
-        self.virus_spread_chance
-        
-    def clasification_situation(self, X, y):
-        clf = tree.DecisionTreeClassifier()
-        clf = clf.fit(X, y)
-        return clf

@@ -7,7 +7,13 @@ def network_portrayal(G):
     # The model ensures there is always 1 agent per node
 
     def node_color(agent):
-        return {State.INFECTED: "#BC2E0F", State.SUSCEPTIBLE: "#42F50E", State.DEAD : "#FFFFFFF"}.get(
+        return {State.INFECTED: "#BC2E0F", 
+                State.SUSCEPTIBLE: "#42F50E", 
+                State.DEAD : "#FFFFFFF",
+                State.WEAK : "#27FF00",
+                State.REGULAR : "#FFF000",
+                State.MODERATE : "#FF7400",
+                State.MORTAL : "#FF0000"}.get(
             agent.state, "#3498DB"
         )
 
@@ -119,10 +125,10 @@ model_params = {
     ),
     "computer_age": mesa.visualization.Slider(
         "Computer Ages",
-        0.1,
-        0.0,
-        10.0,
-        0.1,
+        4,
+        1,
+        10,
+        1,
         description="Computer age"
     ),
     "initial_dead_computer": mesa.visualization.Slider(

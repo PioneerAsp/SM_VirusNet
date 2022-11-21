@@ -2,10 +2,14 @@ import math
 import networkx as nx
 import random
 import mesa
+import numpy as np
 
 from .State import State
 from .ComputerAgent import ComputerAgent
 from .VirusAgent import VirusAgent
+
+MEMORY_SIZE = 512
+DIR_SIZE = 8
 
 def number_state(model, state):
     return sum(1 for a in model.grid.get_all_cell_contents() if a.state is state)
@@ -29,7 +33,7 @@ class VirusOnNetwork(mesa.Model):
         avg_node_degree = 3, #número máximo de conexiones
         initial_outbreak_size = 1, #Agentes contaminados en un inicio
         initial_antivirus_size = 1, #Agentes con antivirus en un inicio
-        virus_spread_chance = 0.2,  #Suceptibilidad de los vecinos al virus
+        virus_spread_chance = 1.0,  #Suceptibilidad de los vecinos al virus
         virus_check_frequency = 0.3, #La probabilidad de que detecte su estado
         check_frequency_antivirus = 0.2, #Probabilidad de que se desactualice el antivirus
         recovery_chance = 0.3, #Probabilidad de que se recupere
@@ -78,6 +82,7 @@ class VirusOnNetwork(mesa.Model):
 
         # Create agents
         for i, node in enumerate(self.G.nodes()):
+            random.seed()
             a = ComputerAgent(  #paramter computer agent
                 i,
                 self,
@@ -85,7 +90,8 @@ class VirusOnNetwork(mesa.Model):
                 self.check_frequency_antivirus,
                 self.recovery_chance,
                 self.gain_resistance_chance_computer,
-                random.random() * self.computer_age,
+                random.randint(0, self.computer_age),
+                np.zeros((MEMORY_SIZE, DIR_SIZE)),
                 0,  #without virus 
                 self.ports,
             )
@@ -106,7 +112,25 @@ class VirusOnNetwork(mesa.Model):
                 self.gain_resistance_chance_virus,
                 a.ports,
             )
-            a.state = State.INFECTED # if node is infected, add a virus
+            random.seed()
+            a.state = State.INFECTED                        # If node is infected, add a virus
+            a.memory = np.zeros((MEMORY_SIZE, DIR_SIZE))    # Initial state of memory
+            
+            m = a.memory.flatten()                          # For easy implementation
+            for i in range((m.shape[0])):                   # Complete with random
+                if(random.randint(0,10) == 5):
+                    m[i] = random.randint(0,1)
+            a.memory = m.reshape(a.memory.shape)            # Reshape update
+            
+            q,n = a.memory.shape
+            if(int((q * n)*0.25) < np.count_nonzero(a.memory)):
+                v.state = State.REGULAR
+            elif(int((q * n)*0.5) < np.count_nonzero(a.memory)):
+                v.state = State.REGULAR
+            elif (int((q * n)*0.75) < np.count_nonzero(a.memory)):
+                v.state = State.MODERATE
+            elif (int((q * n)) < np.count_nonzero(a.memory)):
+                v.state = State.MORTAL
             a.virus = v
             i+=1
             
@@ -123,12 +147,14 @@ class VirusOnNetwork(mesa.Model):
                 0,
                 0,
                 a.ports,
-            )
+            ) 
+            a.memory = (np.ones((MEMORY_SIZE, DIR_SIZE))*-1)
             i+=1
         # Dead some nodes
         dead_nodes = self.random.sample(list(self.G), self.initial_dead_computer)
         for a in self.grid.get_cell_list_contents(dead_nodes):
             a.state = State.DEAD # dead node
+            a.memory = np.ones((MEMORY_SIZE, DIR_SIZE))
             
         self.running = True
         self.datacollector.collect(self)
@@ -142,10 +168,12 @@ class VirusOnNetwork(mesa.Model):
             return math.inf
 
     def step(self):
+        if (number_infected(self) == 0):
+            self.running = False
         self.schedule.step()
         # collect data
         self.datacollector.collect(self)
 
     def run_model(self, n):
-        for i in range(n):
+        while(number_infected(self) != 0):
             self.step()

@@ -11,4 +11,3 @@ class State(Enum):
     REGULAR = 5
     MODERATE = 6
     MORTAL = 7
-    

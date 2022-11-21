@@ -1,5 +1,6 @@
 import mesa
-from sklearn import tree
+import random
+import numpy as np
 from .State import State
 
 class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
@@ -21,27 +22,50 @@ class VirusAgent(mesa.Agent): # Crea las especificaciones del virus
         self.gain_resistance_chance = gain_resistance_chance
         self.ports = ports
         
-        def try_to_infect_computer(self): #Intenta infectar la computadora
-            return
+    def try_to_infect_computer(self, computer): #Intenta infectar la computador
+        ratio_virus = 0.2
+        if (computer.age < 3):
+            ratio_virus = self.virus_spread_chance * 0.4
+        elif (computer.age < 6):
+            ratio_virus = self.virus_spread_chance * 0.8
+        elif (computer.age < 10):
+            ratio_virus = self.virus_spread_chance * 1.2
+        
+        b = self.virus_spread_chance * ratio_virus
+        self.virus_spread_chance = b
+        self.try_increse_size(computer, b)
+        self.update_state(computer.memory)
 
-        def try_increse_size(self): #Incrementa su peso para abarcar mas
-            return
-        
-        def try_check_situation(self): #Verifica su situacion
-            return
-        
-        def try_sneaking(self): #Tratata de ocultarse
-            return
+    def update_state(self, memory):
+        q,n = memory.shape
+        size = int((q * n))
+        if((size*0.25) < np.count_nonzero(memory)):
+            self.state = State.WEAK
+        elif((size*0.5) < np.count_nonzero(memory)):
+            self.state = State.REGULAR
+        elif((size*0.75) < np.count_nonzero(memory)):
+            self.state = State.MODERATE
+        elif ((size) < np.count_nonzero(memory)):
+            self.state = State.MORTAL
+    
+    def try_increse_size(self, computer, b): #Incrementa su peso para abarcar mas
+        q, n = computer.memory.shape
+        m = computer.memory.flatten();
+        size = q*n;
 
-        def step(self):
-            if self.state is State.INFECTED:
-                self.try_to_infect_neighbors()
-            self.try_check_situation()
-        
-        def try_evolution_virus(self): #trata de evolucionar
-            return
-            
-        def clasification_situation(self, X, y):
-            clf = tree.DecisionTreeClassifier()
-            clf = clf.fit(X, y)
-            return clf
+        VirusState = self.state;
+        if(VirusState == State.WEAK):
+            ones = int(size * 0.01 + b)
+        elif(VirusState == State.REGULAR):
+            ones = int(size * 0.10 + b)
+        elif(VirusState == State.MODERATE):
+            ones = int(size * 0.36 + b)
+        elif(VirusState == State.MORTAL):
+            ones = int(size * 0.51 + b)    
+                
+        while(ones != 0):
+            i = random.randint(0, size - 1)
+            if(m[i] != -1):
+                m[i] = 1
+            ones-=1
+        computer.memory = m.reshape(computer.memory.shape)

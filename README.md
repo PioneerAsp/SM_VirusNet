@@ -1,2 +1,2 @@
 # SM_VirusNet
-Pryecto para la materia de Sistemas Multiagente con el tema de Virus en Red.
+Project for the subject of Multiagent Systems with the theme of Network Viruses.
